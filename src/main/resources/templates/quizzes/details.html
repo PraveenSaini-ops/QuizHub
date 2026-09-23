@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: layout(~{::content})}">
+<head>
+    <title th:text="${quiz.title + ' - Quiz Details'}">Quiz Details - QuizHub</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="max-w-4xl mx-auto space-y-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+            <a th:href="@{/quizzes}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                <span>Back to Quizzes</span>
+            </a>
+            <div th:if="${quiz.status.name() == 'ACTIVE'}">
+                <a th:href="@{'/quizzes/' + ${quiz.id} + '/take'}"
+                   class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-md shadow-indigo-500/20 transition-all">
+                    <span class="material-symbols-outlined text-[18px]">play_circle</span>
+                    <span>Start Attempt</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Quiz Details Card -->
+        <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 shadow-sm">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-semibold"
+                      th:text="${quiz.topic.name}">Science</span>
+                <span th:if="${quiz.status.name() == 'ACTIVE'}" class="px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 text-xs font-semibold">Active</span>
+                <span sec:authorize="hasRole('ADMIN')" th:if="${quiz.status.name() == 'DRAFT'}" class="px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-xs font-semibold">Draft</span>
+            </div>
+
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100" th:text="${quiz.title}">General Science Master Quiz</h1>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mt-2" th:text="${quiz.description}">Description</p>
+
+            <!-- Key Info Pill Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 p-4 rounded-xl bg-slate-50 dark:bg-[#172036] border border-slate-200/60 dark:border-slate-800/60 text-center">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase text-slate-400">Total Questions</span>
+                    <span class="text-lg font-bold text-slate-900 dark:text-slate-100" th:text="${quiz.questions.size()}">10</span>
+                </div>
+                <div>
+                    <span class="block text-[11px] font-bold uppercase text-slate-400">Time Limit</span>
+                    <span class="text-lg font-bold text-slate-900 dark:text-slate-100" th:text="${quiz.durationMinutes + ' Mins'}">15 Mins</span>
+                </div>
+                <div>
+                    <span class="block text-[11px] font-bold uppercase text-slate-400">Passing Score</span>
+                    <span class="text-lg font-bold text-slate-900 dark:text-slate-100" th:text="${quiz.passPercentage + '%'}">60%</span>
+                </div>
+                <div>
+                    <span class="block text-[11px] font-bold uppercase text-slate-400">Grading</span>
+                    <span class="text-lg font-bold text-slate-900 dark:text-slate-100">Instant</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Instructions Card (Student View Only) -->
+        <div sec:authorize="hasRole('STUDENT')" class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
+            <h2 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-3 flex items-center gap-2">
+                <span class="material-symbols-outlined text-indigo-600 text-[20px]">info</span>
+                <span>Important Assessment Instructions</span>
+            </h2>
+            <ul class="space-y-2 text-sm text-slate-600 dark:text-slate-400 list-disc list-inside">
+                <li>The timer will start immediately after you click <strong>Start Attempt</strong>.</li>
+                <li>Your selected answers are saved continuously during the quiz.</li>
+                <li>Make sure to submit your quiz before the timer reaches zero.</li>
+                <li>You will receive your results and score breakdown immediately upon submission.</li>
+            </ul>
+        </div>
+
+        <!-- Question List Preview (Admin View Only) -->
+        <div sec:authorize="hasRole('ADMIN')" class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-base font-bold text-slate-900 dark:text-slate-100">Admin Question Set Preview (<span th:text="${quiz.questions.size()}">10</span>)</h2>
+                <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">Visible to Admins only</span>
+            </div>
+
+            <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                <div th:each="q, stat : ${quiz.questions}" class="py-3 flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5"
+                          th:text="${stat.count}">1</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100" th:text="${q.text}">Question text</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400" th:text="${q.questionType.displayName}">MCQ</span>
+                            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400" th:text="${q.difficulty}">EASY</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

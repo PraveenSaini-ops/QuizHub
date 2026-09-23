@@ -1,0 +1,27 @@
+spring:
+  config:
+    activate:
+      on-profile: supabase
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${SUPABASE_DB_HOST:aws-0-ap-northeast-1.pooler.supabase.com}:${SUPABASE_DB_PORT:5432}/${SUPABASE_DB_NAME:postgres}?sslmode=require}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:${SUPABASE_DB_USER:postgres.cfpzwrideomyyiogqfyv}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${SUPABASE_DB_PASSWORD:}}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 300000
+      max-lifetime: 600000
+      connection-timeout: 30000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true

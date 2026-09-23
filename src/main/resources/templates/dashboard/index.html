@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: layout(~{::content})}">
+<head>
+    <title>Dashboard - QuizHub</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="space-y-8">
+        <!-- 1. Greeting & Quick Action Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+                    Welcome back, <span th:text="${currentUser != null ? currentUser.name : 'User'}">User</span>
+                </h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    Manage assessments, create new questions, or take an active quiz.
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a sec:authorize="hasRole('ADMIN')" th:href="@{/questions}"
+                   class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all">
+                    <span class="material-symbols-outlined text-[18px]">help</span>
+                    <span>Question Bank</span>
+                </a>
+                <a sec:authorize="hasRole('ADMIN')" th:href="@{/quizzes/create}"
+                   class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all">
+                    <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                    <span>Create Quiz</span>
+                </a>
+                <a th:href="@{/quizzes}"
+                   class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all">
+                    <span class="material-symbols-outlined text-[18px]">play_circle</span>
+                    <span>Browse All Quizzes</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 2. Stat Cards: Admin View vs Student View -->
+        <!-- Admin KPI Row -->
+        <div sec:authorize="hasRole('ADMIN')" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Total Quizzes -->
+            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-indigo-500/40 transition-colors">
+                <div>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Quizzes</span>
+                    <div class="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1" th:text="${totalQuizzes}">12</div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">assignment</span>
+                </div>
+            </div>
+
+            <!-- Active Quizzes -->
+            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-teal-500/40 transition-colors">
+                <div>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Active Quizzes</span>
+                    <div class="text-3xl font-extrabold text-teal-600 dark:text-teal-400 mt-1" th:text="${activeQuizzes}">6</div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">play_arrow</span>
+                </div>
+            </div>
+
+            <!-- Questions in Bank -->
+            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-amber-500/40 transition-colors">
+                <div>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Questions in Bank</span>
+                    <div class="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1" th:text="${totalQuestions}">50</div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">quiz</span>
+                </div>
+            </div>
+
+            <!-- Overall Avg Score -->
+            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-indigo-500/40 transition-colors">
+                <div>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Overall Avg Score</span>
+                    <div class="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1" th:text="${#numbers.formatDecimal(averageScore, 1, 1) + '%'}">78.4%</div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">trending_up</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Personal Metric Row -->
+        <div sec:authorize="hasRole('STUDENT')" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Available Quizzes -->
+            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-indigo-500/40 transition-colors">
+                <div>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Available Quizzes</span>
+                    <div class="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1" th:text="${activeQuizzes}">6</div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">assignment</span>
+                </div>
+            </div>
+
+            <!-- Quizzes Taken / Completed -->
+            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-teal-500/40 transition-colors">
+                <div>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tests Completed</span>
+                    <div class="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1" th:text="${myCompletedCount}">3</div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">task_alt</span>
+                </div>
+            </div>
+
+            <!-- Quizzes Passed -->
+            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-teal-500/40 transition-colors">
+                <div>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Passed</span>
+                    <div class="text-3xl font-extrabold text-teal-600 dark:text-teal-400 mt-1" th:text="${myPassedCount}">2</div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">verified</span>
+                </div>
+            </div>
+
+            <!-- My Average Score -->
+            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-amber-500/40 transition-colors">
+                <div>
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">My Average Score</span>
+                    <div class="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1" th:text="${myAvgScore + '%'}">85.0%</div>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-[24px]">school</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Two-Column Layout: Available Quizzes & Recent Results -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left: Active & Available Quizzes (8 Cols) -->
+            <div class="lg:col-span-8 bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">Ready to Take</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Select an active quiz to test your knowledge</p>
+                    </div>
+                    <a th:href="@{/quizzes}" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                        <span>View All Quizzes</span>
+                        <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </a>
+                </div>
+
+                <div class="divide-y divide-slate-100 dark:divide-slate-800/60 pt-2 flex-1">
+                    <div th:if="${#lists.isEmpty(recentQuizzes)}" class="py-8 text-center text-sm text-slate-400">
+                        <span class="material-symbols-outlined text-[32px] mb-1">assignment_late</span>
+                        <p>No quizzes available right now.</p>
+                    </div>
+
+                    <div th:each="quiz : ${recentQuizzes}" class="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 -mx-3 px-3 rounded-xl transition-colors">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-[11px] font-semibold"
+                                      th:text="${quiz.topic.name}">Science</span>
+                                <span th:if="${quiz.status.name() == 'ACTIVE'}" class="px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 text-[10px] font-semibold">Active</span>
+                                <span th:unless="${quiz.status.name() == 'ACTIVE'}" class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-semibold" th:text="${quiz.status.name()}">Draft</span>
+                            </div>
+                            <h3 class="font-bold text-sm text-slate-900 dark:text-slate-100 mt-1 truncate" th:text="${quiz.title}">Sample Quiz Title</h3>
+                            <div class="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                <span class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[15px]">quiz</span>
+                                    <span th:text="${quiz.questions.size() + ' Questions'}">10 Questions</span>
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[15px]">timer</span>
+                                    <span th:text="${quiz.durationMinutes + ' mins'}">15 mins</span>
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[15px]">verified</span>
+                                    <span th:text="${'Pass: ' + quiz.passPercentage + '%'}">Pass: 60%</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="shrink-0">
+                            <a th:if="${quiz.status.name() == 'ACTIVE'}" th:href="@{'/quizzes/' + ${quiz.id} + '/take'}"
+                               class="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-sm transition-all">
+                                <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+                                <span>Take Quiz</span>
+                            </a>
+                            <a th:unless="${quiz.status.name() == 'ACTIVE'}" th:href="@{'/quizzes/' + ${quiz.id}}"
+                               class="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 px-3 py-2">
+                                <span>View</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Recent Assessment Results (4 Cols) -->
+            <div class="lg:col-span-4 bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">Recent Scores</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Latest attempts</p>
+                    </div>
+                    <a th:href="@{/results}" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                        <span>View All</span>
+                        <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    </a>
+                </div>
+
+                <div class="divide-y divide-slate-100 dark:divide-slate-800/60 pt-2 flex-1">
+                    <div th:if="${#lists.isEmpty(recentAttempts)}" class="py-8 text-center text-sm text-slate-400">
+                        <span class="material-symbols-outlined text-[32px] mb-1">analytics</span>
+                        <p>No results yet.</p>
+                    </div>
+
+                    <div th:each="attempt : ${recentAttempts}" class="py-3 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate" th:text="${attempt.quiz.title}">Quiz Title</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate" th:text="${attempt.user.name}">Student Name</p>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <span th:if="${attempt.passed}" class="px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200/60 dark:border-teal-800/60" th:text="${attempt.scorePercentage + '%'}">85%</span>
+                            <span th:unless="${attempt.passed}" class="px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 text-xs font-bold border border-red-200/60 dark:border-red-800/60" th:text="${attempt.scorePercentage + '%'}">40%</span>
+                            <a th:href="@{'/results/' + ${attempt.id}}" class="p-1 text-slate-400 hover:text-indigo-600 transition-colors" title="View details">
+                                <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

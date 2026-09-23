@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::content})}">
+<head>
+    <title>Assessment Review - QuizHub</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="max-w-4xl mx-auto space-y-8">
+        <!-- Back navigation -->
+        <div class="flex items-center justify-between">
+            <a th:href="@{/results}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                <span>Back to Results</span>
+            </a>
+            <a th:href="@{'/quizzes/' + ${quiz.id} + '/take'}"
+               class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow-sm transition-all">
+                <span class="material-symbols-outlined text-[16px]">replay</span>
+                <span>Retake Quiz</span>
+            </a>
+        </div>
+
+        <!-- 1. Score Summary Banner -->
+        <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 shadow-sm text-center">
+            <div th:if="${attempt.passed}" class="w-16 h-16 rounded-2xl bg-teal-100 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400 flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <span class="material-symbols-outlined text-[36px]">verified</span>
+            </div>
+            <div th:unless="${attempt.passed}" class="w-16 h-16 rounded-2xl bg-red-100 dark:bg-red-950/80 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <span class="material-symbols-outlined text-[36px]">sentiment_dissatisfied</span>
+            </div>
+
+            <h1 class="text-3xl font-extrabold text-slate-900 dark:text-slate-100" th:text="${attempt.scorePercentage + '%'}">80%</h1>
+            <p class="text-base font-semibold mt-1"
+               th:class="${attempt.passed ? 'text-teal-600 dark:text-teal-400' : 'text-red-600 dark:text-red-400'}"
+               th:text="${attempt.passed ? 'Congratulations! You Passed the Assessment' : 'Assessment Not Passed'}">Passed</p>
+
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" th:text="${quiz.title}">General Science Master Quiz</p>
+
+            <!-- Metrics Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-center">
+                <div>
+                    <span class="block text-[11px] font-bold uppercase text-slate-400">Correct Answers</span>
+                    <span class="text-lg font-bold text-slate-900 dark:text-slate-100" th:text="${attempt.correctAnswers + ' / ' + attempt.totalQuestions}">8 / 10</span>
+                </div>
+                <div>
+                    <span class="block text-[11px] font-bold uppercase text-slate-400">Passing Grade</span>
+                    <span class="text-lg font-bold text-slate-900 dark:text-slate-100" th:text="${quiz.passPercentage + '%'}">60%</span>
+                </div>
+                <div>
+                    <span class="block text-[11px] font-bold uppercase text-slate-400">Duration Limit</span>
+                    <span class="text-lg font-bold text-slate-900 dark:text-slate-100" th:text="${quiz.durationMinutes + ' Mins'}">15 Mins</span>
+                </div>
+                <div>
+                    <span class="block text-[11px] font-bold uppercase text-slate-400">Scoring Engine</span>
+                    <span class="text-lg font-bold text-indigo-600 dark:text-indigo-400">Polymorphic</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Per-Topic Breakdown -->
+        <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm">
+            <h2 class="text-base font-bold text-slate-900 dark:text-slate-100 mb-4">Topic Mastery Breakdown</h2>
+            <div class="space-y-4">
+                <div th:each="entry : ${topicBreakdown}" class="space-y-1.5">
+                    <div class="flex items-center justify-between text-xs font-semibold">
+                        <span class="text-slate-800 dark:text-slate-200" th:text="${entry.key}">Science</span>
+                        <span class="text-slate-500 dark:text-slate-400" th:text="${entry.value.correct + ' of ' + entry.value.total + ' (' + entry.value.percentage + '%)'}">4 of 5 (80%)</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div class="bg-indigo-600 dark:bg-indigo-500 h-2 rounded-full" th:style="'width: ' + ${entry.value.percentage} + '%'"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Question-by-Question Detailed Review -->
+        <div class="space-y-6">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100">Question Review & Explanations</h2>
+
+            <div th:each="q, stat : ${quiz.questions}"
+                 class="bg-white dark:bg-[#131b2e] rounded-2xl border p-6 shadow-sm space-y-4"
+                 th:classappend="${answerMap.containsKey(q.id) && answerMap.get(q.id).correct} ? 'border-teal-200 dark:border-teal-900/60' : 'border-red-200 dark:border-red-900/60'">
+
+                <!-- Question Header -->
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center"
+                              th:classappend="${answerMap.containsKey(q.id) && answerMap.get(q.id).correct} ? 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300' : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'"
+                              th:text="${stat.count}">1</span>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400" th:text="${q.questionType.displayName}">Single Choice</span>
+                    </div>
+                    <div>
+                        <span th:if="${answerMap.containsKey(q.id) && answerMap.get(q.id).correct}"
+                              class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200/60 dark:border-teal-800">
+                            <span class="material-symbols-outlined text-[16px]">check</span>
+                            <span>Correct</span>
+                        </span>
+                        <span th:unless="${answerMap.containsKey(q.id) && answerMap.get(q.id).correct}"
+                              class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 text-xs font-bold border border-red-200/60 dark:border-red-800">
+                            <span class="material-symbols-outlined text-[16px]">close</span>
+                            <span>Incorrect</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Question Text -->
+                <h3 class="text-base font-bold text-slate-900 dark:text-slate-100" th:text="${q.text}">Question text statement</h3>
+
+                <!-- Options List with Highlights -->
+                <div class="space-y-2">
+                    <div th:each="opt : ${q.options}"
+                         class="p-3.5 rounded-xl border text-xs font-medium flex items-center justify-between"
+                         th:classappend="${opt.correct} ?
+                         'bg-teal-50/80 dark:bg-teal-950/40 border-teal-300 dark:border-teal-800 text-teal-900 dark:text-teal-200 font-semibold' :
+                         (answerMap.containsKey(q.id) && answerMap.get(q.id).selectedOptionIds.contains(opt.id) ?
+                         'bg-red-50/80 dark:bg-red-950/40 border-red-300 dark:border-red-800 text-red-900 dark:text-red-200' :
+                         'bg-slate-50 dark:bg-[#1a233b] border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400')">
+
+                        <div class="flex items-center gap-3">
+                            <span th:if="${opt.correct}" class="w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center text-[11px] font-bold">✓</span>
+                            <span th:if="${!opt.correct && answerMap.containsKey(q.id) && answerMap.get(q.id).selectedOptionIds.contains(opt.id)}"
+                                  class="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-[11px] font-bold">✗</span>
+                            <span th:if="${!opt.correct && (!answerMap.containsKey(q.id) || !answerMap.get(q.id).selectedOptionIds.contains(opt.id))}"
+                                  class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center text-[11px] font-bold">○</span>
+
+                            <span th:text="${opt.text}">Option text</span>
+                        </div>
+
+                        <div>
+                            <span th:if="${opt.correct && answerMap.containsKey(q.id) && answerMap.get(q.id).selectedOptionIds.contains(opt.id)}"
+                                  class="text-[10px] uppercase font-bold text-teal-700 dark:text-teal-300">Your Correct Choice</span>
+                            <span th:if="${opt.correct && (!answerMap.containsKey(q.id) || !answerMap.get(q.id).selectedOptionIds.contains(opt.id))}"
+                                  class="text-[10px] uppercase font-bold text-teal-600 dark:text-teal-400">Correct Answer</span>
+                            <span th:if="${!opt.correct && answerMap.containsKey(q.id) && answerMap.get(q.id).selectedOptionIds.contains(opt.id)}"
+                                  class="text-[10px] uppercase font-bold text-red-600 dark:text-red-400">Your Selection</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Explanation Box -->
+                <div th:if="${q.explanation != null && !#strings.isEmpty(q.explanation)}"
+                     class="p-4 rounded-xl bg-slate-50 dark:bg-[#172036] border border-slate-200/60 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300">
+                    <span class="font-bold text-indigo-600 dark:text-indigo-400 block mb-1">💡 Explanation:</span>
+                    <p th:text="${q.explanation}">Detailed rationale for why this is the correct answer.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::content})}">
+<head>
+    <title>Question Bank - QuizHub</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="space-y-6">
+        <!-- 1. Header & Actions Bar -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Question Bank</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Create, edit, and organize questions for your quizzes.</p>
+            </div>
+            <div>
+                <button onclick="openAddQuestionModal()" type="button"
+                        class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    <span>New Question</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. Filters & Search Box -->
+        <div class="bg-white dark:bg-[#131b2e] rounded-xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-sm">
+            <form th:action="@{/questions}" method="get" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                <!-- Search Keyword -->
+                <div class="sm:col-span-5 relative">
+                    <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
+                    <input name="search" th:value="${searchQuery}" type="text"
+                           placeholder="Search question text or explanations..."
+                           class="w-full h-10 pl-10 pr-4 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-900 dark:text-slate-100">
+                </div>
+
+                <!-- Topic Filter -->
+                <div class="sm:col-span-3">
+                    <select name="topicId"
+                            class="w-full h-10 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-slate-100">
+                        <option value="">All Topics</option>
+                        <option th:each="topic : ${topics}" th:value="${topic.id}" th:text="${topic.name}"
+                                th:selected="${selectedTopicId != null && selectedTopicId == topic.id}">Science</option>
+                    </select>
+                </div>
+
+                <!-- Difficulty Filter -->
+                <div class="sm:col-span-2">
+                    <select name="difficulty"
+                            class="w-full h-10 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-slate-100">
+                        <option value="">All Difficulties</option>
+                        <option th:each="diff : ${difficulties}" th:value="${diff}" th:text="${diff}"
+                                th:selected="${selectedDifficulty != null && selectedDifficulty == diff}">MEDIUM</option>
+                    </select>
+                </div>
+
+                <!-- Submit Filter Button -->
+                <div class="sm:col-span-2 flex items-center gap-2">
+                    <button type="submit"
+                            class="flex-1 h-10 bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-semibold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1">
+                        <span class="material-symbols-outlined text-[16px]">filter_list</span>
+                        <span>Filter</span>
+                    </button>
+                    <a th:href="@{/questions}" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" title="Reset Filters">
+                        <span class="material-symbols-outlined text-[20px]">restart_alt</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- 3. Question Bank Data Table -->
+        <div class="bg-white dark:bg-[#131b2e] rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/80 dark:bg-[#172036]/60 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                            <th class="py-3.5 px-6">Question & Options</th>
+                            <th class="py-3.5 px-6">Topic</th>
+                            <th class="py-3.5 px-6">Type</th>
+                            <th class="py-3.5 px-6">Difficulty</th>
+                            <th class="py-3.5 px-6 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
+                        <tr th:if="${questionPage.empty}">
+                            <td colspan="5" class="py-12 text-center text-slate-400">
+                                <span class="material-symbols-outlined text-[36px] mb-2 text-slate-300">search_off</span>
+                                <p class="text-sm font-medium">No questions found matching your filter criteria.</p>
+                            </td>
+                        </tr>
+
+                        <tr th:each="q : ${questionPage.content}" class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                            <td class="py-4 px-6 max-w-xl">
+                                <div class="font-semibold text-slate-900 dark:text-slate-100" th:text="${q.text}">What is the capital of France?</div>
+                                <div th:if="${q.explanation != null && !#strings.isEmpty(q.explanation)}"
+                                     class="text-xs text-slate-500 dark:text-slate-400 mt-1 italic" th:text="${'💡 ' + q.explanation}">Explanation</div>
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    <span th:each="opt : ${q.options}"
+                                          th:class="${opt.correct} ?
+                                          'px-2 py-0.5 rounded text-[11px] font-medium bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800' :
+                                          'px-2 py-0.5 rounded text-[11px] text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800'"
+                                          th:text="${(opt.correct ? '✓ ' : '') + opt.text}">Option</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6">
+                                <span class="px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-semibold"
+                                      th:text="${q.topic.name}">Science</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <span class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium"
+                                      th:text="${q.questionType.displayName}">Single Choice</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <span th:if="${q.difficulty.name() == 'EASY'}" class="px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 text-xs font-semibold">Easy</span>
+                                <span th:if="${q.difficulty.name() == 'MEDIUM'}" class="px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-xs font-semibold">Medium</span>
+                                <span th:if="${q.difficulty.name() == 'HARD'}" class="px-2.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 text-xs font-semibold">Hard</span>
+                            </td>
+                            <td class="py-4 px-6 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    <button th:data-id="${q.id}" onclick="loadQuestionForEdit(this.getAttribute('data-id'))" type="button"
+                                            class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg transition-colors" title="Edit Question">
+                                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                                    </button>
+                                    <form th:action="@{'/questions/' + ${q.id} + '/delete'}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this question?');">
+                                        <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors" title="Delete Question">
+                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div th:if="${questionPage.totalPages > 1}" class="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <span class="text-xs text-slate-500">
+                    Showing page <span th:text="${questionPage.number + 1}">1</span> of <span th:text="${questionPage.totalPages}">5</span> (<span th:text="${questionPage.totalElements}">50</span> questions)
+                </span>
+                <div class="flex items-center gap-1">
+                    <a th:if="${questionPage.hasPrevious()}"
+                       th:href="@{/questions(page=${questionPage.number - 1}, size=10, topicId=${selectedTopicId}, difficulty=${selectedDifficulty}, search=${searchQuery})}"
+                       class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">Previous</a>
+                    <a th:if="${questionPage.hasNext()}"
+                       th:href="@{/questions(page=${questionPage.number + 1}, size=10, topicId=${selectedTopicId}, difficulty=${selectedDifficulty}, search=${searchQuery})}"
+                       class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800">Next</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Add / Edit Question Modal -->
+    <div id="questionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                <h3 id="modalTitle" class="text-lg font-bold text-slate-900 dark:text-slate-100">Add New Question</h3>
+                <button onclick="closeQuestionModal()" type="button" class="text-slate-400 hover:text-slate-600">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+
+            <form id="questionForm" th:action="@{/questions}" method="post" class="mt-4 space-y-4">
+                <!-- Hidden ID for edit -->
+                <input type="hidden" id="questionId" name="id" value="">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Question Text</label>
+                    <textarea id="formText" name="text" rows="3" required placeholder="Enter the question statement..."
+                              class="w-full p-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-slate-100"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Topic</label>
+                        <select id="formTopicId" name="topicId" required
+                                class="w-full h-10 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100">
+                            <option th:each="topic : ${topics}" th:value="${topic.id}" th:text="${topic.name}">Science</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Question Type</label>
+                        <select id="formQuestionType" name="questionType" required onchange="handleQuestionTypeChange()"
+                                class="w-full h-10 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100">
+                            <option th:each="type : ${questionTypes}" th:value="${type}" th:text="${type.displayName}">Single Choice</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Difficulty</label>
+                        <select id="formDifficulty" name="difficulty" required
+                                class="w-full h-10 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100">
+                            <option th:each="diff : ${difficulties}" th:value="${diff}" th:text="${diff}">MEDIUM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Explanation (Optional)</label>
+                    <input id="formExplanation" name="explanation" type="text" placeholder="Why is this answer correct?"
+                           class="w-full h-10 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100">
+                </div>
+
+                <!-- Dynamic Options Section -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Options & Correct Answer Check</label>
+                    <div id="optionsContainer" class="space-y-2.5">
+                        <!-- Option 0 -->
+                        <div class="flex items-center gap-2 option-row">
+                            <input type="checkbox" name="options[0].correct" value="true" class="w-4 h-4 text-indigo-600 rounded cursor-pointer option-correct-box">
+                            <input type="text" name="options[0].text" placeholder="Option 1" required
+                                   class="flex-1 h-9 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100 option-text-input">
+                        </div>
+                        <!-- Option 1 -->
+                        <div class="flex items-center gap-2 option-row">
+                            <input type="checkbox" name="options[1].correct" value="true" class="w-4 h-4 text-indigo-600 rounded cursor-pointer option-correct-box">
+                            <input type="text" name="options[1].text" placeholder="Option 2" required
+                                   class="flex-1 h-9 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100 option-text-input">
+                        </div>
+                        <!-- Option 2 -->
+                        <div class="flex items-center gap-2 option-row">
+                            <input type="checkbox" name="options[2].correct" value="true" class="w-4 h-4 text-indigo-600 rounded cursor-pointer option-correct-box">
+                            <input type="text" name="options[2].text" placeholder="Option 3"
+                                   class="flex-1 h-9 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100 option-text-input">
+                        </div>
+                        <!-- Option 3 -->
+                        <div class="flex items-center gap-2 option-row">
+                            <input type="checkbox" name="options[3].correct" value="true" class="w-4 h-4 text-indigo-600 rounded cursor-pointer option-correct-box">
+                            <input type="text" name="options[3].text" placeholder="Option 4"
+                                   class="flex-1 h-9 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100 option-text-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                    <button onclick="closeQuestionModal()" type="button"
+                            class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">Cancel</button>
+                    <button type="submit"
+                            class="px-5 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all">Save Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts for modal handling -->
+    <script>
+        function openAddQuestionModal() {
+            document.getElementById('modalTitle').innerText = 'Add New Question';
+            document.getElementById('questionForm').action = '/questions';
+            document.getElementById('questionId').value = '';
+            document.getElementById('formText').value = '';
+            document.getElementById('formExplanation').value = '';
+            document.getElementById('formQuestionType').value = 'MCQ';
+            handleQuestionTypeChange();
+            document.getElementById('questionModal').classList.remove('hidden');
+        }
+
+        function closeQuestionModal() {
+            document.getElementById('questionModal').classList.add('hidden');
+        }
+
+        function handleQuestionTypeChange() {
+            const type = document.getElementById('formQuestionType').value;
+            const container = document.getElementById('optionsContainer');
+            if (type === 'TRUE_FALSE') {
+                container.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="options[0].correct" value="true" checked class="w-4 h-4 text-indigo-600 rounded">
+                        <input type="text" name="options[0].text" value="True" readonly class="flex-1 h-9 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="options[1].correct" value="true" class="w-4 h-4 text-indigo-600 rounded">
+                        <input type="text" name="options[1].text" value="False" readonly class="flex-1 h-9 px-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="options[0].correct" value="true" checked class="w-4 h-4 text-indigo-600 rounded">
+                        <input type="text" name="options[0].text" placeholder="Option 1" required class="flex-1 h-9 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="options[1].correct" value="true" class="w-4 h-4 text-indigo-600 rounded">
+                        <input type="text" name="options[1].text" placeholder="Option 2" required class="flex-1 h-9 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="options[2].correct" value="true" class="w-4 h-4 text-indigo-600 rounded">
+                        <input type="text" name="options[2].text" placeholder="Option 3" class="flex-1 h-9 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" name="options[3].correct" value="true" class="w-4 h-4 text-indigo-600 rounded">
+                        <input type="text" name="options[3].text" placeholder="Option 4" class="flex-1 h-9 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                    </div>
+                `;
+            }
+        }
+
+        async function loadQuestionForEdit(id) {
+            try {
+                const res = await fetch('/questions/' + id + '/edit');
+                if (!res.ok) throw new Error('Failed to load question details');
+                const data = await res.json();
+
+                document.getElementById('modalTitle').innerText = 'Edit Question';
+                document.getElementById('questionForm').action = '/questions/' + id;
+                document.getElementById('questionId').value = data.id;
+                document.getElementById('formText').value = data.text;
+                document.getElementById('formExplanation').value = data.explanation || '';
+                document.getElementById('formTopicId').value = data.topicId;
+                document.getElementById('formQuestionType').value = data.questionType;
+                document.getElementById('formDifficulty').value = data.difficulty;
+
+                const container = document.getElementById('optionsContainer');
+                container.innerHTML = '';
+                data.options.forEach((opt, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center gap-2';
+                    div.innerHTML = `
+                        <input type="checkbox" name="options[${idx}].correct" value="true" ${opt.correct ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                        <input type="text" name="options[${idx}].text" value="${opt.text}" required class="flex-1 h-9 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm">
+                    `;
+                    container.appendChild(div);
+                });
+
+                document.getElementById('questionModal').classList.remove('hidden');
+            } catch (err) {
+                alert('Error loading question: ' + err.message);
+            }
+        }
+    </script>
+</div>
+</body>
+</html>

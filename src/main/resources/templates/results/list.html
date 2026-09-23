@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: layout(~{::content})}">
+<head>
+    <title>Results & Assessments - QuizHub</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Assessment Results</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Review test attempts, score achievements, and detailed explanations.</p>
+            </div>
+            <a th:href="@{/quizzes}"
+               class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm transition-all">
+                <span class="material-symbols-outlined text-[18px]">play_circle</span>
+                <span>Take a Quiz</span>
+            </a>
+        </div>
+
+        <!-- Metric summary strip -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white dark:bg-[#131b2e] rounded-xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Completed Tests</span>
+                <p class="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1" th:text="${totalAttempts}">12</p>
+            </div>
+            <div class="bg-white dark:bg-[#131b2e] rounded-xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Passed Tests</span>
+                <p class="text-2xl font-bold text-teal-600 dark:text-teal-400 mt-1" th:text="${passedCount}">10</p>
+            </div>
+            <div class="bg-white dark:bg-[#131b2e] rounded-xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Average Score</span>
+                <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1" th:text="${avgScore + '%'}">82.5%</p>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="bg-white dark:bg-[#131b2e] rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/80 dark:bg-[#172036]/60 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                            <th class="py-3.5 px-6">Quiz Assessment</th>
+                            <th sec:authorize="hasRole('ADMIN')" class="py-3.5 px-6">Student</th>
+                            <th class="py-3.5 px-6">Score</th>
+                            <th class="py-3.5 px-6">Result</th>
+                            <th class="py-3.5 px-6">Date Taken</th>
+                            <th class="py-3.5 px-6 text-right">Review</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 text-sm">
+                        <tr th:if="${#lists.isEmpty(attempts)}">
+                            <td colspan="6" class="py-12 text-center text-slate-400">
+                                <span class="material-symbols-outlined text-[36px] mb-2 text-slate-300">analytics</span>
+                                <p class="text-sm font-medium">No quiz attempts recorded yet.</p>
+                            </td>
+                        </tr>
+
+                        <tr th:each="att : ${attempts}" class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                            <td class="py-4 px-6 font-semibold text-slate-900 dark:text-slate-100">
+                                <span th:text="${att.quiz.title}">General Science Master Quiz</span>
+                                <span class="block text-xs font-normal text-slate-500 dark:text-slate-400" th:text="${att.quiz.topic.name}">Science</span>
+                            </td>
+                            <td sec:authorize="hasRole('ADMIN')" class="py-4 px-6 text-xs text-slate-700 dark:text-slate-300" th:text="${att.user.name}">Student Name</td>
+                            <td class="py-4 px-6">
+                                <span class="text-sm font-bold text-slate-900 dark:text-slate-100" th:text="${att.scorePercentage != null ? att.scorePercentage + '%' : '0%'}">85%</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400" th:text="'(' + ${att.correctAnswers} + '/' + ${att.totalQuestions} + ')'">(8/10)</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <span th:if="${att.passed}" class="px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200/60 dark:border-teal-800">PASSED</span>
+                                <span th:unless="${att.passed}" class="px-2.5 py-0.5 rounded-full bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 text-xs font-bold border border-red-200/60 dark:border-red-800">FAILED</span>
+                            </td>
+                            <td class="py-4 px-6 text-xs text-slate-500 dark:text-slate-400"
+                                th:text="${att.submittedAt != null ? #temporals.format(att.submittedAt, 'yyyy-MM-dd HH:mm') : 'In progress'}">2026-09-22 10:30</td>
+                            <td class="py-4 px-6 text-right">
+                                <a th:href="@{'/results/' + ${att.id}}"
+                                   class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                                    <span>Detailed Review</span>
+                                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

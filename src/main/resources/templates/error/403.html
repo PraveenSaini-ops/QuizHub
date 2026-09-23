@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - Access Denied</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/custom.css}">
+</head>
+<body class="bg-[#f8f9ff] dark:bg-[#0b1326] text-slate-900 dark:text-slate-100 min-h-screen flex items-center justify-center p-6 antialiased">
+    <div class="max-w-md w-full text-center space-y-6">
+        <div class="w-16 h-16 rounded-2xl bg-red-100 dark:bg-red-950/80 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto shadow-sm">
+            <span class="material-symbols-outlined text-[36px]">lock</span>
+        </div>
+        <div class="space-y-2">
+            <span class="text-xs font-mono font-bold text-red-600 dark:text-red-400">403 FORBIDDEN</span>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100">Access Denied</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">You do not have permission to access this administrative page.</p>
+        </div>
+        <div class="pt-4 flex items-center justify-center gap-3">
+            <a th:href="@{/dashboard}" class="px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all">
+                Return to Dashboard
+            </a>
+        </div>
+    </div>
+</body>
+</html>

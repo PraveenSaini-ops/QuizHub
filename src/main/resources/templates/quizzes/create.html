@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::content})}">
+<head>
+    <title>Create Quiz - QuizHub</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="max-w-4xl mx-auto space-y-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Create Assessment Quiz</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure parameters, select question pools, or generate with auto-shuffle.</p>
+            </div>
+            <a th:href="@{/quizzes}" class="inline-flex items-center gap-1 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                <span>Back to Quizzes</span>
+            </a>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-8 shadow-sm">
+            <form th:action="@{/quizzes}" th:object="${quizForm}" method="post" class="space-y-6">
+                <!-- Title & Topic -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Quiz Title</label>
+                        <input th:field="*{title}" type="text" required placeholder="e.g. Midterm Physics & Mechanics Examination"
+                               class="w-full h-11 px-4 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-slate-100 transition-all">
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Description (Optional)</label>
+                        <textarea th:field="*{description}" rows="2" placeholder="Brief instructions or syllabus topics covered..."
+                                  class="w-full p-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-slate-100 transition-all"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Topic</label>
+                        <select id="topicSelect" th:field="*{topicId}" required onchange="handleTopicOrModeChange()"
+                                class="w-full h-11 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100">
+                            <option th:each="topic : ${topics}" th:value="${topic.id}" th:text="${topic.name}">Science</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Duration (Mins)</label>
+                            <input th:field="*{durationMinutes}" type="number" min="1" max="180" required
+                                   class="w-full h-11 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Pass Mark (%)</label>
+                            <input th:field="*{passPercentage}" type="number" min="1" max="100" required
+                                   class="w-full h-11 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selection Mode Tabs (Auto vs Manual) -->
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">Question Selection Mode</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/40 dark:has-[:checked]:bg-indigo-950/40">
+                            <input type="radio" th:field="*{selectionMode}" value="AUTO" checked onchange="handleSelectionModeToggle()"
+                                   class="w-4 h-4 text-indigo-600">
+                            <div>
+                                <span class="block text-sm font-bold text-slate-900 dark:text-slate-100">Auto Selection</span>
+                                <span class="block text-xs text-slate-500 dark:text-slate-400">Randomized auto-shuffle from topic question bank</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60 has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/40 dark:has-[:checked]:bg-indigo-950/40">
+                            <input type="radio" th:field="*{selectionMode}" value="MANUAL" onchange="handleSelectionModeToggle()"
+                                   class="w-4 h-4 text-indigo-600">
+                            <div>
+                                <span class="block text-sm font-bold text-slate-900 dark:text-slate-100">Manual Selection</span>
+                                <span class="block text-xs text-slate-500 dark:text-slate-400">Hand-pick specific questions from list</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Auto Selection Settings Container -->
+                <div id="autoSection" class="p-4 rounded-xl bg-slate-50 dark:bg-[#172036] border border-slate-200/60 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Number of Questions</label>
+                        <input th:field="*{autoQuestionCount}" type="number" min="1" max="100"
+                               class="w-full h-10 px-3 bg-white dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none text-slate-900 dark:text-slate-100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Difficulty Filter</label>
+                        <select th:field="*{difficultyFilter}"
+                                class="w-full h-10 px-3 bg-white dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none text-slate-900 dark:text-slate-100">
+                            <option value="">Any Difficulty (Mixed)</option>
+                            <option th:each="diff : ${difficulties}" th:value="${diff}" th:text="${diff}">EASY</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Manual Selection Question Table Container -->
+                <div id="manualSection" class="hidden space-y-3">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Select Questions to Include</label>
+                    <div id="manualQuestionsList" class="max-h-80 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-800 p-2 bg-slate-50/50 dark:bg-[#172036]/50">
+                        <p class="text-xs text-slate-400 p-4 text-center">Loading questions...</p>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                    <a th:href="@{/quizzes}"
+                       class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">Cancel</a>
+                    <button type="submit"
+                            class="px-6 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-md shadow-indigo-500/20 transition-all flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">check</span>
+                        <span>Save & Publish Quiz</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function handleSelectionModeToggle() {
+            const isManual = document.querySelector('input[name="selectionMode"][value="MANUAL"]').checked;
+            const autoSection = document.getElementById('autoSection');
+            const manualSection = document.getElementById('manualSection');
+
+            if (isManual) {
+                autoSection.classList.add('hidden');
+                manualSection.classList.remove('hidden');
+                loadTopicQuestionsForManual();
+            } else {
+                autoSection.classList.remove('hidden');
+                manualSection.classList.add('hidden');
+            }
+        }
+
+        async function loadTopicQuestionsForManual() {
+            const topicId = document.getElementById('topicSelect').value;
+            const listEl = document.getElementById('manualQuestionsList');
+            listEl.innerHTML = '<p class="text-xs text-slate-400 p-4 text-center">Loading questions...</p>';
+
+            try {
+                const res = await fetch('/quizzes/questions-by-topic?topicId=' + topicId);
+                if (!res.ok) throw new Error('Failed to fetch questions');
+                const questions = await res.json();
+
+                if (questions.length === 0) {
+                    listEl.innerHTML = '<p class="text-xs text-amber-600 p-4 text-center">No questions found in this topic yet.</p>';
+                    return;
+                }
+
+                let html = '';
+                questions.forEach(q => {
+                    html += `
+                        <label class="flex items-start gap-3 p-3 hover:bg-white dark:hover:bg-[#1a233b] rounded-lg cursor-pointer transition-colors">
+                            <input type="checkbox" name="selectedQuestionIds" value="${q.id}" class="mt-1 w-4 h-4 text-indigo-600 rounded">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold text-slate-900 dark:text-slate-100">${q.text}</p>
+                                <span class="inline-block mt-1 text-[10px] font-mono px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">${q.difficulty}</span>
+                            </div>
+                        </label>
+                    `;
+                });
+                listEl.innerHTML = html;
+            } catch (err) {
+                listEl.innerHTML = '<p class="text-xs text-red-500 p-4 text-center">Error loading questions: ' + err.message + '</p>';
+            }
+        }
+
+        function handleTopicOrModeChange() {
+            const isManual = document.querySelector('input[name="selectionMode"][value="MANUAL"]').checked;
+            if (isManual) {
+                loadTopicQuestionsForManual();
+            }
+        }
+    </script>
+</div>
+</body>
+</html>

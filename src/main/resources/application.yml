@@ -1,0 +1,43 @@
+server:
+  port: ${PORT:8080}
+  error:
+    whitelabel:
+      enabled: false
+
+spring:
+  application:
+    name: quizhub
+  profiles:
+    active: h2
+
+  # H2 Profile Default Settings
+  datasource:
+    url: jdbc:h2:mem:quizhubdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password: 
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  thymeleaf:
+    cache: false
+    mode: HTML
+    encoding: UTF-8
+
+logging:
+  level:
+    root: INFO
+    com.quizhub: DEBUG
+    org.hibernate.SQL: WARN

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<aside th:fragment="sidebar(activeNav)" class="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-[#131b2e] border-r border-slate-200/80 dark:border-slate-800 z-50 flex flex-col justify-between transition-all duration-300 shadow-sm">
+    <div class="flex flex-col flex-1 overflow-y-auto">
+        <!-- Logo Header -->
+        <div class="h-16 px-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80">
+            <a th:href="@{/dashboard}" class="flex items-center gap-3 group">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+                    <span class="material-symbols-outlined text-[20px]">quiz</span>
+                </div>
+                <span class="font-bold text-xl text-slate-900 dark:text-slate-100 tracking-tight">Quiz<span class="text-indigo-600 dark:text-indigo-400">Hub</span></span>
+            </a>
+            <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60"
+                  sec:authorize="hasRole('ADMIN')">ADMIN</span>
+            <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-teal-50 dark:bg-teal-950/80 text-teal-600 dark:text-teal-400 border border-teal-200/60 dark:border-teal-800/60"
+                  sec:authorize="hasRole('STUDENT')">STUDENT</span>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="px-3 py-4">
+            <nav class="flex flex-col gap-1 text-sm font-medium">
+                <!-- Dashboard -->
+                <a th:href="@{/dashboard}"
+                   th:class="${activeNav == 'dashboard'} ?
+                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600 text-white shadow-sm font-semibold' :
+                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200 transition-colors'">
+                    <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <!-- Quizzes (Unified) -->
+                <a th:href="@{/quizzes}"
+                   th:class="${activeNav == 'quizzes' or activeNav == 'live-quizzes' or activeNav == 'create-quiz'} ?
+                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600 text-white shadow-sm font-semibold' :
+                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200 transition-colors'">
+                    <span class="material-symbols-outlined text-[20px]">assignment</span>
+                    <span>Quizzes</span>
+                </a>
+
+                <!-- Question Bank (Admin Only) -->
+                <a sec:authorize="hasRole('ADMIN')" th:href="@{/questions}"
+                   th:class="${activeNav == 'questions'} ?
+                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600 text-white shadow-sm font-semibold' :
+                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200 transition-colors'">
+                    <span class="material-symbols-outlined text-[20px]">help</span>
+                    <span>Question Bank</span>
+                </a>
+
+                <!-- Topics (Admin Only) -->
+                <a sec:authorize="hasRole('ADMIN')" th:href="@{/topics}"
+                   th:class="${activeNav == 'topics'} ?
+                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600 text-white shadow-sm font-semibold' :
+                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200 transition-colors'">
+                    <span class="material-symbols-outlined text-[20px]">category</span>
+                    <span>Topics</span>
+                </a>
+
+                <!-- Results & History -->
+                <a th:href="@{/results}"
+                   th:class="${activeNav == 'results'} ?
+                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600 text-white shadow-sm font-semibold' :
+                   'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200 transition-colors'">
+                    <span class="material-symbols-outlined text-[20px]">analytics</span>
+                    <span>Results & History</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- User Profile Footer -->
+    <div class="p-4 bg-slate-50 dark:bg-[#0e1628] border-t border-slate-200/80 dark:border-slate-800">
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center shrink-0 text-xs">
+                    <span th:text="${#authentication.name != null ? #strings.substring(#authentication.name,0,1).toUpperCase() : 'U'}">A</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate" th:text="${#authentication.name}">admin@quizhub.com</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate" sec:authorize="hasRole('ADMIN')">Administrator</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate" sec:authorize="hasRole('STUDENT')">Student</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+                <button onclick="toggleTheme()" type="button" aria-label="Toggle Theme" title="Toggle Theme"
+                        class="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-amber-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined dark:hidden text-[18px]">dark_mode</span>
+                    <span class="material-symbols-outlined hidden dark:inline text-[18px]">light_mode</span>
+                </button>
+                <form th:action="@{/logout}" method="post" class="inline">
+                    <button type="submit" aria-label="Logout" title="Sign Out"
+                            class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</aside>
+</body>
+</html>
