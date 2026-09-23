@@ -4,15 +4,14 @@ import com.quizhub.model.Quiz;
 import com.quizhub.model.QuizStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface QuizRepository extends JpaRepository<Quiz, Long> {
+public interface QuizRepository extends JpaRepository<Quiz, Long>, JpaSpecificationExecutor<Quiz> {
 
     List<Quiz> findByTopicId(Long topicId);
 
@@ -20,20 +19,9 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
     List<Quiz> findByTitleContainingIgnoreCase(String keyword);
 
-    java.util.Optional<Quiz> findByAccessCodeIgnoreCase(String accessCode);
+    Optional<Quiz> findByAccessCodeIgnoreCase(String accessCode);
 
     boolean existsByAccessCode(String accessCode);
-
-    @Query("SELECT q FROM Quiz q WHERE " +
-           "(:topicId IS NULL OR q.topic.id = :topicId) AND " +
-           "(:status IS NULL OR q.status = :status) AND " +
-           "(:search IS NULL OR LOWER(q.title) LIKE LOWER(CONCAT('%', :search, '%')))")
-    Page<Quiz> findFilteredQuizzes(
-            @Param("topicId") Long topicId,
-            @Param("status") QuizStatus status,
-            @Param("search") String search,
-            Pageable pageable
-    );
 
     long countByStatus(QuizStatus status);
 }

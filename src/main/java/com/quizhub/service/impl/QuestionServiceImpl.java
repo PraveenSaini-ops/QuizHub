@@ -36,8 +36,24 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional(readOnly = true)
     public Page<Question> findFilteredQuestions(Long topicId, Difficulty difficulty, String search, Pageable pageable) {
-        String searchParam = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
-        return questionRepository.findFilteredQuestions(topicId, difficulty, searchParam, pageable);
+        org.springframework.data.jpa.domain.Specification<Question> spec = (root, query, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+
+            if (topicId != null) {
+                predicates.add(cb.equal(root.get("topic").get("id"), topicId));
+            }
+            if (difficulty != null) {
+                predicates.add(cb.equal(root.get("difficulty"), difficulty));
+            }
+            if (search != null && !search.trim().isEmpty()) {
+                String pattern = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.like(cb.lower(root.get("text")), pattern));
+            }
+
+            return predicates.isEmpty() ? null : cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        return questionRepository.findAll(spec, pageable);
     }
 
     @Override

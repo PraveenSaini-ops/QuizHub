@@ -39,8 +39,24 @@ public class QuizServiceImpl implements QuizService {
     @Override
     @Transactional(readOnly = true)
     public Page<Quiz> findFilteredQuizzes(Long topicId, QuizStatus status, String search, Pageable pageable) {
-        String searchParam = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
-        return quizRepository.findFilteredQuizzes(topicId, status, searchParam, pageable);
+        org.springframework.data.jpa.domain.Specification<Quiz> spec = (root, query, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+
+            if (topicId != null) {
+                predicates.add(cb.equal(root.get("topic").get("id"), topicId));
+            }
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (search != null && !search.trim().isEmpty()) {
+                String pattern = "%" + search.trim().toLowerCase() + "%";
+                predicates.add(cb.like(cb.lower(root.get("title")), pattern));
+            }
+
+            return predicates.isEmpty() ? null : cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        return quizRepository.findAll(spec, pageable);
     }
 
     @Override
