@@ -45,6 +45,12 @@ public class Quiz {
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Attempt> attempts = new ArrayList<>();
 
+    @Column(nullable = false, unique = true)
+    private String accessCode;
+
+    @Column(nullable = true)
+    private String accessPassword;
+
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -57,6 +63,16 @@ public class Quiz {
         this.topic = topic;
         this.durationMinutes = durationMinutes;
         this.status = status;
+    }
+
+    public Quiz(String title, String description, Topic topic, int durationMinutes, QuizStatus status, String accessCode, String accessPassword) {
+        this.title = title;
+        this.description = description;
+        this.topic = topic;
+        this.durationMinutes = durationMinutes;
+        this.status = status;
+        this.accessCode = accessCode;
+        this.accessPassword = accessPassword;
     }
 
     public Long getId() {
@@ -113,6 +129,26 @@ public class Quiz {
 
     public void setPassPercentage(int passPercentage) {
         this.passPercentage = passPercentage;
+    }
+
+    public String getAccessCode() {
+        return accessCode;
+    }
+
+    public void setAccessCode(String accessCode) {
+        this.accessCode = accessCode;
+    }
+
+    public String getAccessPassword() {
+        return accessPassword;
+    }
+
+    public void setAccessPassword(String accessPassword) {
+        this.accessPassword = accessPassword;
+    }
+
+    public boolean hasPassword() {
+        return accessPassword != null && !accessPassword.trim().isEmpty();
     }
 
     public List<Question> getQuestions() {

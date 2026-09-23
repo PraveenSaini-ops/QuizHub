@@ -84,49 +84,75 @@
             </div>
         </div>
 
-        <!-- Student Personal Metric Row -->
-        <div sec:authorize="hasRole('STUDENT')" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <!-- Available Quizzes -->
-            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-indigo-500/40 transition-colors">
-                <div>
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Available Quizzes</span>
-                    <div class="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1" th:text="${activeQuizzes}">6</div>
+        <!-- Student Personal Metric Row & Quick Join Card -->
+        <div sec:authorize="hasRole('STUDENT')" class="space-y-6">
+            <!-- Quick Join Bar -->
+            <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-6 shadow-lg shadow-indigo-950/20 border border-indigo-700/50 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="max-w-xl">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 text-xs font-semibold mb-2">
+                        <span class="material-symbols-outlined text-[14px]">bolt</span>
+                        <span>Direct Exam Admission</span>
+                    </div>
+                    <h2 class="text-xl font-bold tracking-tight text-white">Have a Quiz Link or Code?</h2>
+                    <p class="text-xs text-indigo-200 mt-1">Paste your invite link or enter the access code provided by your instructor to immediately unlock and start your assessment.</p>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-[24px]">assignment</span>
-                </div>
+                <form th:action="@{/quizzes/join}" method="get" class="w-full md:w-auto flex-1 max-w-md flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <span class="material-symbols-outlined absolute left-3 top-3 text-indigo-300 text-[20px]">key</span>
+                        <input name="code" type="text" required placeholder="e.g. TECH-101 or full link..."
+                               class="w-full h-11 pl-10 pr-3 bg-white/10 hover:bg-white/15 focus:bg-white/20 border border-indigo-400/40 focus:border-white rounded-xl text-white placeholder:text-indigo-200/60 text-sm font-mono outline-none transition-all">
+                    </div>
+                    <button type="submit"
+                            class="h-11 px-5 bg-white hover:bg-indigo-50 text-indigo-900 font-bold text-sm rounded-xl shadow-md transition-all shrink-0 flex items-center gap-1.5 active:scale-95">
+                        <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                        <span>Join</span>
+                    </button>
+                </form>
             </div>
 
-            <!-- Quizzes Taken / Completed -->
-            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-teal-500/40 transition-colors">
-                <div>
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tests Completed</span>
-                    <div class="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1" th:text="${myCompletedCount}">3</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- Available Quizzes -->
+                <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-indigo-500/40 transition-colors">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Available Quizzes</span>
+                        <div class="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1" th:text="${activeQuizzes}">6</div>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[24px]">assignment</span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-[24px]">task_alt</span>
-                </div>
-            </div>
 
-            <!-- Quizzes Passed -->
-            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-teal-500/40 transition-colors">
-                <div>
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Passed</span>
-                    <div class="text-3xl font-extrabold text-teal-600 dark:text-teal-400 mt-1" th:text="${myPassedCount}">2</div>
+                <!-- Quizzes Taken / Completed -->
+                <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-teal-500/40 transition-colors">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tests Completed</span>
+                        <div class="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1" th:text="${myCompletedCount}">3</div>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[24px]">task_alt</span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-[24px]">verified</span>
-                </div>
-            </div>
 
-            <!-- My Average Score -->
-            <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-amber-500/40 transition-colors">
-                <div>
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">My Average Score</span>
-                    <div class="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1" th:text="${myAvgScore + '%'}">85.0%</div>
+                <!-- Quizzes Passed -->
+                <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-teal-500/40 transition-colors">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Passed</span>
+                        <div class="text-3xl font-extrabold text-teal-600 dark:text-teal-400 mt-1" th:text="${myPassedCount}">2</div>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[24px]">verified</span>
+                    </div>
                 </div>
-                <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-[24px]">school</span>
+
+                <!-- My Average Score -->
+                <div class="bg-white dark:bg-[#131b2e] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm flex items-center justify-between hover:border-amber-500/40 transition-colors">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">My Average Score</span>
+                        <div class="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1" th:text="${myAvgScore + '%'}">85.0%</div>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[24px]">school</span>
+                    </div>
                 </div>
             </div>
         </div>

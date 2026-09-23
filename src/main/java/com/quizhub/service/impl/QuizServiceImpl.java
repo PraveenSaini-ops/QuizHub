@@ -68,6 +68,15 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Quiz> findByAccessCode(String accessCode) {
+        if (accessCode == null || accessCode.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return quizRepository.findByAccessCodeIgnoreCase(accessCode.trim());
+    }
+
+    @Override
     public Quiz createQuiz(QuizCreateDto dto) {
         Topic topic = topicRepository.findById(dto.getTopicId())
                 .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + dto.getTopicId()));
@@ -79,6 +88,25 @@ public class QuizServiceImpl implements QuizService {
         quiz.setDurationMinutes(dto.getDurationMinutes());
         quiz.setPassPercentage(dto.getPassPercentage());
         quiz.setStatus(dto.getStatus() != null ? dto.getStatus() : QuizStatus.ACTIVE);
+
+        // Handle Access Code
+        String code = dto.getAccessCode();
+        if (code == null || code.trim().isEmpty()) {
+            String prefix = topic.getName().replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+            if (prefix.length() > 4) prefix = prefix.substring(0, 4);
+            code = generateUniqueAccessCode(prefix.isEmpty() ? "QUIZ" : prefix);
+        } else {
+            code = code.trim().toUpperCase();
+        }
+        quiz.setAccessCode(code);
+
+        // Handle Access Password
+        String pass = dto.getAccessPassword();
+        if (pass != null && !pass.trim().isEmpty()) {
+            quiz.setAccessPassword(pass.trim());
+        } else {
+            quiz.setAccessPassword(null);
+        }
 
         List<Question> questions = resolveQuestions(dto, topic);
         quiz.setQuestions(questions);
@@ -103,10 +131,32 @@ public class QuizServiceImpl implements QuizService {
             quiz.setStatus(dto.getStatus());
         }
 
+        if (dto.getAccessCode() != null && !dto.getAccessCode().trim().isEmpty()) {
+            quiz.setAccessCode(dto.getAccessCode().trim().toUpperCase());
+        }
+        if (dto.getAccessPassword() != null) {
+            quiz.setAccessPassword(dto.getAccessPassword().trim().isEmpty() ? null : dto.getAccessPassword().trim());
+        }
+
         List<Question> questions = resolveQuestions(dto, topic);
         quiz.setQuestions(questions);
 
         return quizRepository.save(quiz);
+    }
+
+    private String generateUniqueAccessCode(String prefix) {
+        String code;
+        int attempts = 0;
+        do {
+            int randomNum = 1000 + (int)(Math.random() * 9000);
+            code = prefix + "-" + randomNum;
+            attempts++;
+            if (attempts > 50) {
+                code = prefix + "-" + java.util.UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                break;
+            }
+        } while (quizRepository.existsByAccessCode(code));
+        return code;
     }
 
     @Override

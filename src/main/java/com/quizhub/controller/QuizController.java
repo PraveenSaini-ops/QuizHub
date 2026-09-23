@@ -26,15 +26,18 @@ public class QuizController {
     private final TopicService topicService;
     private final QuestionService questionService;
     private final UserService userService;
+    private final com.quizhub.service.AttemptService attemptService;
 
     public QuizController(QuizService quizService,
                           TopicService topicService,
                           QuestionService questionService,
-                          UserService userService) {
+                          UserService userService,
+                          com.quizhub.service.AttemptService attemptService) {
         this.quizService = quizService;
         this.topicService = topicService;
         this.questionService = questionService;
         this.userService = userService;
+        this.attemptService = attemptService;
     }
 
     @GetMapping
@@ -139,7 +142,9 @@ public class QuizController {
         Quiz quiz = quizService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Quiz not found with id: " + id));
 
+        List<Attempt> attempts = attemptService.findAttemptsByQuizId(id);
         model.addAttribute("quiz", quiz);
+        model.addAttribute("attempts", attempts);
         return "quizzes/details";
     }
 

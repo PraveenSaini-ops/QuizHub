@@ -16,6 +16,7 @@ public interface AttemptService {
     AttemptAnswer saveAnswer(AttemptAnswerDto answerDto);
     Attempt submitAttempt(Long attemptId, QuizSubmissionDto submissionDto);
     List<Attempt> findUserAttempts(Long userId);
+    List<Attempt> findAttemptsByQuizId(Long quizId);
     List<Attempt> findAllAttempts();
     List<AttemptAnswer> findAttemptAnswers(Long attemptId);
     Map<Long, List<Long>> getSavedAnswersMap(Long attemptId);

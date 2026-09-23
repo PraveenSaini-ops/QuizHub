@@ -63,7 +63,17 @@
                                 <span th:text="${att.quiz.title}">General Science Master Quiz</span>
                                 <span class="block text-xs font-normal text-slate-500 dark:text-slate-400" th:text="${att.quiz.topic.name}">Science</span>
                             </td>
-                            <td sec:authorize="hasRole('ADMIN')" class="py-4 px-6 text-xs text-slate-700 dark:text-slate-300" th:text="${att.user.name}">Student Name</td>
+                            <td sec:authorize="hasRole('ADMIN')" class="py-4 px-6">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center text-xs shrink-0">
+                                        <span th:text="${att.user != null ? #strings.substring(att.user.name, 0, 1).toUpperCase() : 'S'}">A</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block" th:text="${att.user != null ? att.user.name : 'Unknown'}">Student Name</span>
+                                        <span class="text-[11px] text-slate-500 dark:text-slate-400 font-mono block" th:text="${att.user != null ? att.user.email : ''}">student@quizhub.com</span>
+                                    </div>
+                                </div>
+                            </td>
                             <td class="py-4 px-6">
                                 <span class="text-sm font-bold text-slate-900 dark:text-slate-100" th:text="${att.scorePercentage != null ? att.scorePercentage + '%' : '0%'}">85%</span>
                                 <span class="text-xs text-slate-500 dark:text-slate-400" th:text="'(' + ${att.correctAnswers} + '/' + ${att.totalQuestions} + ')'">(8/10)</span>

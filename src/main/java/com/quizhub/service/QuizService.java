@@ -15,6 +15,7 @@ public interface QuizService {
     List<Quiz> findActiveQuizzes();
     List<Quiz> findAll();
     Optional<Quiz> findById(Long id);
+    Optional<Quiz> findByAccessCode(String accessCode);
     Quiz createQuiz(QuizCreateDto dto);
     Quiz updateQuiz(Long id, QuizCreateDto dto);
     void deleteById(Long id);

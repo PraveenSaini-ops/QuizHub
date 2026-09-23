@@ -11,14 +11,21 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Quiz Assessments</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure durations, publish tests, and review question sets.</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure durations, publish tests, share links, and attempt assessments.</p>
             </div>
-            <div sec:authorize="hasRole('ADMIN')">
-                <a th:href="@{/quizzes/create}"
-                   class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all">
-                    <span class="material-symbols-outlined text-[18px]">add_circle</span>
-                    <span>Create New Quiz</span>
+            <div class="flex items-center gap-3">
+                <a th:href="@{/quizzes/join}"
+                   class="inline-flex items-center gap-2 bg-white dark:bg-[#131b2e] border border-slate-200 dark:border-slate-700 hover:border-indigo-500 text-slate-800 dark:text-slate-200 text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all">
+                    <span class="material-symbols-outlined text-[18px] text-indigo-600 dark:text-indigo-400">key</span>
+                    <span>Join by Code / Link</span>
                 </a>
+                <div sec:authorize="hasRole('ADMIN')">
+                    <a th:href="@{/quizzes/create}"
+                       class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all">
+                        <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                        <span>Create New Quiz</span>
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -29,7 +36,7 @@
                 <div class="sm:col-span-5 relative">
                     <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">search</span>
                     <input name="search" th:value="${searchQuery}" type="text"
-                           placeholder="Search quiz titles..."
+                           placeholder="Search quiz titles or access codes..."
                            class="w-full h-10 pl-10 pr-4 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-900 dark:text-slate-100">
                 </div>
 
@@ -78,8 +85,16 @@
                  class="bg-white dark:bg-[#131b2e] rounded-xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between hover:shadow-md hover:border-indigo-500/40 transition-all">
                 <div>
                     <div class="flex items-start justify-between gap-3">
-                        <span class="px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-semibold"
-                              th:text="${quiz.topic.name}">Technology</span>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-semibold"
+                                  th:text="${quiz.topic.name}">Technology</span>
+                            <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[11px] font-bold"
+                                  th:text="${quiz.accessCode}">TECH-101</span>
+                            <span th:if="${quiz.hasPassword()}" class="px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 text-[10px] font-semibold flex items-center gap-0.5" title="Password Protected">
+                                <span class="material-symbols-outlined text-[12px]">lock</span>
+                                <span>Protected</span>
+                            </span>
+                        </div>
                         <div>
                             <span th:if="${quiz.status.name() == 'ACTIVE'}" class="px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 text-xs font-semibold">Active</span>
                             <span sec:authorize="hasRole('ADMIN')" th:if="${quiz.status.name() == 'DRAFT'}" class="px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-xs font-semibold">Draft</span>
@@ -90,8 +105,24 @@
                     <h3 class="text-lg font-bold text-slate-900 dark:text-slate-100 mt-3" th:text="${quiz.title}">Full-Stack Software Engineering Assessment</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 min-h-[32px]" th:text="${quiz.description}">Description about the quiz assessment.</p>
 
+                    <!-- Admin Invite & Credentials Bar -->
+                    <div sec:authorize="hasRole('ADMIN')" class="mt-3 p-2.5 rounded-lg bg-slate-50 dark:bg-[#172036] border border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <div class="min-w-0">
+                            <span class="text-[10px] text-slate-400 uppercase font-bold block">Password:</span>
+                            <span class="font-mono font-semibold text-slate-700 dark:text-slate-300"
+                                  th:text="${quiz.hasPassword() ? quiz.accessPassword : 'None (Open)'}">pass123</span>
+                        </div>
+                        <button type="button"
+                                th:attr="onclick=|copyQuizInvite('${quiz.title}', '${quiz.accessCode}', '${quiz.accessPassword != null ? quiz.accessPassword : ''}')|"
+                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 font-semibold text-[11px] transition-colors"
+                                title="Copy Share Link and Credentials to Clipboard">
+                            <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                            <span>Copy Invite</span>
+                        </button>
+                    </div>
+
                     <!-- Quiz Meta Details -->
-                    <div class="grid grid-cols-3 gap-2 mt-4 py-3 px-3.5 bg-slate-50 dark:bg-[#172036] rounded-xl border border-slate-200/60 dark:border-slate-800/60 text-center">
+                    <div class="grid grid-cols-3 gap-2 mt-3 py-2.5 px-3 bg-slate-50/50 dark:bg-[#172036]/50 rounded-xl border border-slate-200/60 dark:border-slate-800/60 text-center">
                         <div>
                             <span class="block text-[10px] uppercase font-bold text-slate-400">Questions</span>
                             <span class="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono" th:text="${quiz.questions.size()}">10</span>
@@ -107,7 +138,7 @@
                     </div>
                 </div>
 
-                <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-2">
                     <a th:href="@{'/quizzes/' + ${quiz.id}}"
                        class="text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400">
                         View Details
@@ -118,7 +149,7 @@
                         <form sec:authorize="hasRole('ADMIN')" th:action="@{'/quizzes/' + ${quiz.id} + '/status'}" method="post" class="inline">
                             <input type="hidden" name="status" th:value="${quiz.status.name() == 'ACTIVE' ? 'DRAFT' : 'ACTIVE'}">
                             <button type="submit" class="p-1.5 text-slate-400 hover:text-amber-600 rounded-lg"
-                                    th:title="${quiz.status.name() == 'ACTIVE' ? 'Set to Draft' : 'Set to Active'}">
+                                     th:title="${quiz.status.name() == 'ACTIVE' ? 'Set to Draft' : 'Set to Active'}">
                                 <span class="material-symbols-outlined text-[18px]">toggle_on</span>
                             </button>
                         </form>

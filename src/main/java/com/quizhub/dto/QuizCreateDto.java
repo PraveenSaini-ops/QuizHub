@@ -37,6 +37,10 @@ public class QuizCreateDto {
 
     private List<Long> selectedQuestionIds = new ArrayList<>();
 
+    private String accessCode;
+
+    private String accessPassword;
+
     public Long getId() {
         return id;
     }
@@ -123,5 +127,21 @@ public class QuizCreateDto {
 
     public void setSelectedQuestionIds(List<Long> selectedQuestionIds) {
         this.selectedQuestionIds = selectedQuestionIds;
+    }
+
+    public String getAccessCode() {
+        return accessCode;
+    }
+
+    public void setAccessCode(String accessCode) {
+        this.accessCode = accessCode;
+    }
+
+    public String getAccessPassword() {
+        return accessPassword;
+    }
+
+    public void setAccessPassword(String accessPassword) {
+        this.accessPassword = accessPassword;
     }
 }

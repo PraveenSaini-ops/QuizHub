@@ -165,6 +165,12 @@ public class AttemptServiceImpl implements AttemptService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Attempt> findAttemptsByQuizId(Long quizId) {
+        return attemptRepository.findByQuizIdOrderByStartedAtDesc(quizId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Attempt> findAllAttempts() {
         return attemptRepository.findAllByOrderByStartedAtDesc();
     }

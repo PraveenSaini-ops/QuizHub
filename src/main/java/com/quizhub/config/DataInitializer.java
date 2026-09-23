@@ -181,7 +181,7 @@ public class DataInitializer implements CommandLineRunner {
         if (tech != null) {
             Quiz techQuiz = new Quiz("Full-Stack Software Engineering Assessment",
                     "Test your fundamental understanding of computer networks, databases, Java, and modern OOP paradigms.",
-                    tech, 15, QuizStatus.ACTIVE);
+                    tech, 15, QuizStatus.ACTIVE, "TECH-101", "pass123");
             techQuiz.setQuestions(questionRepository.findByTopicId(tech.getId()));
             quizRepository.save(techQuiz);
         }
@@ -189,7 +189,7 @@ public class DataInitializer implements CommandLineRunner {
         if (science != null) {
             Quiz scienceQuiz = new Quiz("General Science & Natural Laws Master Quiz",
                     "Comprehensive exam covering elements, biology, mechanics, and astronomy.",
-                    science, 20, QuizStatus.ACTIVE);
+                    science, 20, QuizStatus.ACTIVE, "SCI-202", "science123");
             scienceQuiz.setQuestions(questionRepository.findByTopicId(science.getId()));
             quizRepository.save(scienceQuiz);
         }
@@ -197,7 +197,7 @@ public class DataInitializer implements CommandLineRunner {
         if (geo != null) {
             Quiz geoQuiz = new Quiz("World Geography & Capital Cities Challenge",
                     "Explore continents, mountain ranges, world capitals, and landmarks.",
-                    geo, 10, QuizStatus.ACTIVE);
+                    geo, 10, QuizStatus.ACTIVE, "GEO-303", "geo123");
             geoQuiz.setQuestions(questionRepository.findByTopicId(geo.getId()));
             quizRepository.save(geoQuiz);
         }

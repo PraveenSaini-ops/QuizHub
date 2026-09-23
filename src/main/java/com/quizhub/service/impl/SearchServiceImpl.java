@@ -40,7 +40,14 @@ public class SearchServiceImpl implements SearchService {
         String q = query.trim();
         List<Topic> topics = topicRepository.findByNameContainingIgnoreCase(q);
         List<Question> questions = questionRepository.findByTextContainingIgnoreCase(q);
-        List<Quiz> quizzes = quizRepository.findByTitleContainingIgnoreCase(q);
+        List<Quiz> quizzes = new java.util.ArrayList<>(quizRepository.findByTitleContainingIgnoreCase(q));
+
+        // Also check direct access code match
+        quizRepository.findByAccessCodeIgnoreCase(q).ifPresent(matchingQuiz -> {
+            if (quizzes.stream().noneMatch(quiz -> quiz.getId().equals(matchingQuiz.getId()))) {
+                quizzes.add(0, matchingQuiz);
+            }
+        });
 
         result.setTopics(topics);
         result.setQuestions(questions);

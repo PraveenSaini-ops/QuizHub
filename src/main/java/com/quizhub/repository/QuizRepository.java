@@ -20,6 +20,10 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
     List<Quiz> findByTitleContainingIgnoreCase(String keyword);
 
+    java.util.Optional<Quiz> findByAccessCodeIgnoreCase(String accessCode);
+
+    boolean existsByAccessCode(String accessCode);
+
     @Query("SELECT q FROM Quiz q WHERE " +
            "(:topicId IS NULL OR q.topic.id = :topicId) AND " +
            "(:status IS NULL OR q.status = :status) AND " +
