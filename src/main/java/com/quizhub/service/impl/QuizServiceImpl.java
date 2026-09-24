@@ -27,13 +27,16 @@ public class QuizServiceImpl implements QuizService {
     private final QuizRepository quizRepository;
     private final TopicRepository topicRepository;
     private final QuestionRepository questionRepository;
+    private final com.quizhub.service.TopicService topicService;
 
     public QuizServiceImpl(QuizRepository quizRepository,
                            TopicRepository topicRepository,
-                           QuestionRepository questionRepository) {
+                           QuestionRepository questionRepository,
+                           com.quizhub.service.TopicService topicService) {
         this.quizRepository = quizRepository;
         this.topicRepository = topicRepository;
         this.questionRepository = questionRepository;
+        this.topicService = topicService;
     }
 
     @Override
@@ -94,8 +97,7 @@ public class QuizServiceImpl implements QuizService {
 
     @Override
     public Quiz createQuiz(QuizCreateDto dto) {
-        Topic topic = topicRepository.findById(dto.getTopicId())
-                .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + dto.getTopicId()));
+        Topic topic = resolveTopic(dto.getTopicId(), dto.getNewTopicName());
 
         Quiz quiz = new Quiz();
         quiz.setTitle(dto.getTitle());
@@ -135,8 +137,7 @@ public class QuizServiceImpl implements QuizService {
         Quiz quiz = quizRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found with id: " + id));
 
-        Topic topic = topicRepository.findById(dto.getTopicId())
-                .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + dto.getTopicId()));
+        Topic topic = resolveTopic(dto.getTopicId(), dto.getNewTopicName());
 
         quiz.setTitle(dto.getTitle());
         quiz.setDescription(dto.getDescription());
@@ -158,6 +159,17 @@ public class QuizServiceImpl implements QuizService {
         quiz.setQuestions(questions);
 
         return quizRepository.save(quiz);
+    }
+
+    private Topic resolveTopic(Long topicId, String newTopicName) {
+        if (newTopicName != null && !newTopicName.trim().isEmpty()) {
+            return topicService.findOrCreateTopicByName(newTopicName.trim());
+        }
+        if (topicId != null) {
+            return topicRepository.findById(topicId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + topicId));
+        }
+        throw new ResourceNotFoundException("Topic is required. Please select or write a new topic.");
     }
 
     private String generateUniqueAccessCode(String prefix) {

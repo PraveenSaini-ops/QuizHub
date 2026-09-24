@@ -77,6 +77,10 @@ public class QuestionBankController {
             redirectAttributes.addFlashAttribute("errorMessage", "Please fix the validation errors in the question form.");
             return "redirect:/questions";
         }
+        if (formDto.getTopicId() == null && (formDto.getNewTopicName() == null || formDto.getNewTopicName().trim().isEmpty())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Please select an existing topic or enter a new topic name.");
+            return "redirect:/questions";
+        }
         try {
             questionService.createQuestionFromDto(formDto);
             redirectAttributes.addFlashAttribute("successMessage", "Question created successfully!");
@@ -103,6 +107,10 @@ public class QuestionBankController {
     ) {
         if (bindingResult.hasErrors()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Validation errors when updating question.");
+            return "redirect:/questions";
+        }
+        if (formDto.getTopicId() == null && (formDto.getNewTopicName() == null || formDto.getNewTopicName().trim().isEmpty())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Please select an existing topic or enter a new topic name.");
             return "redirect:/questions";
         }
         try {

@@ -26,7 +26,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers(
                     new AntPathRequestMatcher("/h2-console/**"),
-                    new AntPathRequestMatcher("/api/**")
+                    new AntPathRequestMatcher("/api/**"),
+                    new AntPathRequestMatcher("/topics/api/**")
                 )
             )
             .headers(headers -> headers
@@ -48,6 +49,7 @@ public class SecurityConfig {
                     "/topics/new",
                     "/topics/*/edit",
                     "/topics/*/delete",
+                    "/topics/api/**",
                     "/quizzes/create",
                     "/quizzes/*/edit",
                     "/quizzes/*/delete",

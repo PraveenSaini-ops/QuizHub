@@ -81,6 +81,25 @@ public class TopicServiceImpl implements TopicService {
     }
 
     @Override
+    public Topic findOrCreateTopicByName(String name) {
+        return findOrCreateTopicByName(name, null);
+    }
+
+    @Override
+    public Topic findOrCreateTopicByName(String name, String description) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Topic name cannot be blank");
+        }
+        String trimmedName = name.trim();
+        return topicRepository.findByNameIgnoreCase(trimmedName)
+                .orElseGet(() -> {
+                    String desc = (description != null && !description.trim().isEmpty()) ? description.trim() : "Custom Topic";
+                    Topic newTopic = new Topic(trimmedName, desc, null);
+                    return topicRepository.save(newTopic);
+                });
+    }
+
+    @Override
     public void deleteById(Long id) {
         topicRepository.deleteById(id);
     }

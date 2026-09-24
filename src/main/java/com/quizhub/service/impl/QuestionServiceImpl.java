@@ -24,13 +24,16 @@ public class QuestionServiceImpl implements QuestionService {
     private final QuestionRepository questionRepository;
     private final TopicRepository topicRepository;
     private final OptionRepository optionRepository;
+    private final com.quizhub.service.TopicService topicService;
 
     public QuestionServiceImpl(QuestionRepository questionRepository,
                                TopicRepository topicRepository,
-                               OptionRepository optionRepository) {
+                               OptionRepository optionRepository,
+                               com.quizhub.service.TopicService topicService) {
         this.questionRepository = questionRepository;
         this.topicRepository = topicRepository;
         this.optionRepository = optionRepository;
+        this.topicService = topicService;
     }
 
     @Override
@@ -87,8 +90,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public Question createQuestionFromDto(QuestionFormDto dto) {
-        Topic topic = topicRepository.findById(dto.getTopicId())
-                .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + dto.getTopicId()));
+        Topic topic = resolveTopic(dto.getTopicId(), dto.getNewTopicName());
 
         Question question = instantiateQuestionByType(dto.getQuestionType(), dto.getText(), dto.getExplanation(), dto.getDifficulty(), topic);
         populateOptions(question, dto);
@@ -100,8 +102,7 @@ public class QuestionServiceImpl implements QuestionService {
         Question existing = questionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + id));
 
-        Topic topic = topicRepository.findById(dto.getTopicId())
-                .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + dto.getTopicId()));
+        Topic topic = resolveTopic(dto.getTopicId(), dto.getNewTopicName());
 
         // If question type changed, replace with a newly typed instance
         if (existing.getQuestionType() != dto.getQuestionType()) {
@@ -120,6 +121,17 @@ public class QuestionServiceImpl implements QuestionService {
         existing.getOptions().clear();
         populateOptions(existing, dto);
         return questionRepository.save(existing);
+    }
+
+    private Topic resolveTopic(Long topicId, String newTopicName) {
+        if (newTopicName != null && !newTopicName.trim().isEmpty()) {
+            return topicService.findOrCreateTopicByName(newTopicName.trim());
+        }
+        if (topicId != null) {
+            return topicRepository.findById(topicId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Topic not found with id: " + topicId));
+        }
+        throw new ResourceNotFoundException("Topic is required. Please select or write a new topic.");
     }
 
     @Override

@@ -170,12 +170,42 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Topic</label>
-                        <select id="formTopicId" name="topicId" required
-                                class="w-full h-10 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100">
-                            <option th:each="topic : ${topics}" th:value="${topic.id}" th:text="${topic.name}">Science</option>
-                        </select>
+                    <div class="sm:col-span-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Topic</label>
+                            <button id="toggleNewTopicBtn" type="button" onclick="toggleQuestionNewTopic(true)"
+                                    class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-semibold flex items-center gap-0.5">
+                                <span class="material-symbols-outlined text-[13px]">add</span>
+                                <span>New</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Existing Topic Select Box -->
+                        <div id="existingTopicWrapper">
+                            <select id="formTopicId" name="topicId" onchange="handleQuestionTopicSelectChange()"
+                                    class="w-full h-10 px-3 bg-slate-50 dark:bg-[#1a233b] border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100">
+                                <option value="">-- Select Topic --</option>
+                                <option th:each="topic : ${topics}" th:value="${topic.id}" th:text="${topic.name}">Science</option>
+                                <option value="__NEW__" class="font-semibold text-indigo-600 dark:text-indigo-400">+ Write New Topic...</option>
+                            </select>
+                        </div>
+
+                        <!-- Write New Topic Input Box (Hidden by default) -->
+                        <div id="newTopicWrapper" class="hidden space-y-1.5">
+                            <div class="flex items-center gap-1.5">
+                                <input id="formNewTopicName" name="newTopicName" type="text" placeholder="New topic name..."
+                                       class="flex-1 h-10 px-3 bg-slate-50 dark:bg-[#1a233b] border border-indigo-300 dark:border-indigo-600 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-900 dark:text-slate-100">
+                                <button type="button" onclick="quickAddTopicInQuestionModal()" title="Save topic immediately"
+                                        class="h-10 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center transition-colors">
+                                    <span class="material-symbols-outlined text-[16px]">check</span>
+                                </button>
+                                <button type="button" onclick="toggleQuestionNewTopic(false)" title="Back to list"
+                                        class="h-10 px-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <span class="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block">Type a new topic name to create it</span>
+                        </div>
                     </div>
 
                     <div>
@@ -244,6 +274,80 @@
 
     <!-- Scripts for modal handling -->
     <script>
+        function toggleQuestionNewTopic(showNew) {
+            const existingWrapper = document.getElementById('existingTopicWrapper');
+            const newWrapper = document.getElementById('newTopicWrapper');
+            const toggleBtn = document.getElementById('toggleNewTopicBtn');
+            const selectEl = document.getElementById('formTopicId');
+            const inputEl = document.getElementById('formNewTopicName');
+
+            if (showNew) {
+                existingWrapper.classList.add('hidden');
+                newWrapper.classList.remove('hidden');
+                toggleBtn.classList.add('hidden');
+                selectEl.value = '';
+                inputEl.focus();
+            } else {
+                existingWrapper.classList.remove('hidden');
+                newWrapper.classList.add('hidden');
+                toggleBtn.classList.remove('hidden');
+                inputEl.value = '';
+                if (selectEl.value === '__NEW__') {
+                    selectEl.selectedIndex = 0;
+                }
+            }
+        }
+
+        function handleQuestionTopicSelectChange() {
+            const selectEl = document.getElementById('formTopicId');
+            if (selectEl.value === '__NEW__') {
+                toggleQuestionNewTopic(true);
+            }
+        }
+
+        async function quickAddTopicInQuestionModal() {
+            const inputEl = document.getElementById('formNewTopicName');
+            const name = inputEl.value.trim();
+            if (!name) {
+                alert('Please enter a topic name.');
+                inputEl.focus();
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                const res = await fetch('/topics/api/quick-create', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || 'Failed to create topic');
+                }
+
+                // Add newly created topic to form select and filter select
+                const selectEl = document.getElementById('formTopicId');
+                let existingOpt = Array.from(selectEl.options).find(o => o.value == data.id);
+                if (!existingOpt) {
+                    existingOpt = document.createElement('option');
+                    existingOpt.value = data.id;
+                    existingOpt.text = data.name;
+                    // Insert before the __NEW__ option
+                    const newOptIndex = Array.from(selectEl.options).findIndex(o => o.value === '__NEW__');
+                    if (newOptIndex !== -1) {
+                        selectEl.insertBefore(existingOpt, selectEl.options[newOptIndex]);
+                    } else {
+                        selectEl.appendChild(existingOpt);
+                    }
+                }
+                selectEl.value = data.id;
+                toggleQuestionNewTopic(false);
+            } catch (err) {
+                alert('Error creating topic: ' + err.message);
+            }
+        }
+
         function openAddQuestionModal() {
             document.getElementById('modalTitle').innerText = 'Add New Question';
             document.getElementById('questionForm').action = '/questions';
@@ -251,6 +355,7 @@
             document.getElementById('formText').value = '';
             document.getElementById('formExplanation').value = '';
             document.getElementById('formQuestionType').value = 'MCQ';
+            toggleQuestionNewTopic(false);
             handleQuestionTypeChange();
             document.getElementById('questionModal').classList.remove('hidden');
         }
@@ -306,6 +411,7 @@
                 document.getElementById('questionId').value = data.id;
                 document.getElementById('formText').value = data.text;
                 document.getElementById('formExplanation').value = data.explanation || '';
+                toggleQuestionNewTopic(false);
                 document.getElementById('formTopicId').value = data.topicId;
                 document.getElementById('formQuestionType').value = data.questionType;
                 document.getElementById('formDifficulty').value = data.difficulty;

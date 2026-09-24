@@ -69,6 +69,27 @@ public class TopicController {
         return "redirect:/topics";
     }
 
+    @PostMapping("/api/quick-create")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> quickCreateTopic(
+            @RequestParam("name") String name,
+            @RequestParam(value = "description", required = false) String description
+    ) {
+        if (name == null || name.trim().isEmpty()) {
+            return org.springframework.http.ResponseEntity.badRequest().body(java.util.Map.of("error", "Topic name is required"));
+        }
+        try {
+            Topic topic = topicService.findOrCreateTopicByName(name, description);
+            return org.springframework.http.ResponseEntity.ok(java.util.Map.of(
+                    "id", topic.getId(),
+                    "name", topic.getName(),
+                    "description", topic.getDescription() != null ? topic.getDescription() : ""
+            ));
+        } catch (Exception ex) {
+            return org.springframework.http.ResponseEntity.badRequest().body(java.util.Map.of("error", ex.getMessage()));
+        }
+    }
+
     @PostMapping("/{id}/delete")
     public String deleteTopic(
             @PathVariable("id") Long id,

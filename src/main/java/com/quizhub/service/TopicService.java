@@ -12,6 +12,8 @@ public interface TopicService {
     Topic save(Topic topic);
     Topic createTopic(String name, String description, Integer openTdbCategoryId);
     Topic updateTopic(Long id, String name, String description, Integer openTdbCategoryId);
+    Topic findOrCreateTopicByName(String name);
+    Topic findOrCreateTopicByName(String name, String description);
     void deleteById(Long id);
     TopicCardDto getTopicCard(Long topicId);
 }

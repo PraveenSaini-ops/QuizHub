@@ -16,8 +16,9 @@ public class QuestionFormDto {
 
     private String explanation;
 
-    @NotNull(message = "Topic is required")
     private Long topicId;
+
+    private String newTopicName;
 
     @NotNull(message = "Difficulty is required")
     private Difficulty difficulty = Difficulty.MEDIUM;
@@ -102,6 +103,14 @@ public class QuestionFormDto {
 
     public void setTopicId(Long topicId) {
         this.topicId = topicId;
+    }
+
+    public String getNewTopicName() {
+        return newTopicName;
+    }
+
+    public void setNewTopicName(String newTopicName) {
+        this.newTopicName = newTopicName;
     }
 
     public Difficulty getDifficulty() {

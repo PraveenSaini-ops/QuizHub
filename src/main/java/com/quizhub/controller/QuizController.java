@@ -116,6 +116,9 @@ public class QuizController {
             Model model,
             RedirectAttributes redirectAttributes
     ) {
+        if (formDto.getTopicId() == null && (formDto.getNewTopicName() == null || formDto.getNewTopicName().trim().isEmpty())) {
+            bindingResult.rejectValue("topicId", "error.quizForm", "Please select a topic or enter a new topic name");
+        }
         if (bindingResult.hasErrors()) {
             User currentUser = userService.getCurrentUser();
             model.addAttribute("currentUser", currentUser);

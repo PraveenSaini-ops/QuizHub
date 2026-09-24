@@ -17,8 +17,9 @@ public class QuizCreateDto {
 
     private String description;
 
-    @NotNull(message = "Topic is required")
     private Long topicId;
+
+    private String newTopicName;
 
     @Min(value = 1, message = "Duration must be at least 1 minute")
     private int durationMinutes = 15;
@@ -71,6 +72,14 @@ public class QuizCreateDto {
 
     public void setTopicId(Long topicId) {
         this.topicId = topicId;
+    }
+
+    public String getNewTopicName() {
+        return newTopicName;
+    }
+
+    public void setNewTopicName(String newTopicName) {
+        this.newTopicName = newTopicName;
     }
 
     public int getDurationMinutes() {
